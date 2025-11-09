@@ -1,148 +1,469 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo Basic Fire Safety Course</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .section { margin-bottom: 20px; }
-        .hidden { display: none; }
-        .question { margin-bottom: 15px; }
-        label { display: block; }
-        button { padding: 10px; margin-top: 10px; }
-        #language-select { margin-bottom: 20px; }
-    </style>
+  <meta charset="utf-8" />
+  <title>Safety Induction — Video & Quiz (EN/GR)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0b0c10; --card:#16181d; --text:#e6e6e6; --muted:#a8b3bd; --accent:#4aa3ff; --bad:#ff6b6b; --good:#22c55e; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; color:var(--text); background:linear-gradient(180deg,#0b0c10,#0f1115);}
+    header { padding:24px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+    .brand { font-weight:700; letter-spacing:.3px }
+    .lang-switch { display:flex; gap:8px; }
+    .btn { padding:10px 14px; border-radius:14px; border:1px solid #2b2f36; background:#1a1d23; color:var(--text); cursor:pointer; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .btn.accent { background:var(--accent); border-color:transparent; color:#081018; font-weight:600; }
+    .btn.ghost { background:transparent; }
+    main { max-width:920px; margin:0 auto; padding:0 16px 64px; }
+    .card { background:var(--card); border:1px solid #22262d; border-radius:20px; padding:18px; margin:14px 0; }
+    .video-wrap { aspect-ratio:16/9; background:#000; border-radius:16px; overflow:hidden; }
+    .row { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+    .meta { color:var(--muted); font-size:.95rem; }
+    .pill { padding:6px 10px; border:1px solid #2b2f36; border-radius:999px; color:var(--muted); }
+    h1 { font-size:1.6rem; margin:12px 0; }
+    h2 { font-size:1.2rem; margin:8px 0 6px; color:#cfe3ff;}
+    ol.q { list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+    .q-item { padding:16px; border:1px solid #262a32; border-radius:16px; background:#14171d; }
+    .q-stem { margin:0 0 8px; font-weight:600; }
+    .opts { display:grid; gap:8px; }
+    label.opt { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #262a32; border-radius:12px; cursor:pointer; background:#11151b;}
+    label.opt:hover { border-color:#2f343e; }
+    input[type="radio"] { transform:translateY(2px); }
+    .result { padding:14px; border-radius:14px; }
+    .ok { background:#0e1b12; border:1px solid #1e3323; color:#c7f7d1; }
+    .bad { background:#2a1212; border:1px solid #402020; color:#ffd1d1; }
+    .footer { color:var(--muted); font-size:.9rem; margin-top:8px; }
+    .grid-2 { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+    .hide { display:none !important; }
+    .center { text-align:center; }
+    .hr { height:1px; background:#22262d; margin:14px 0; }
+  </style>
 </head>
 <body>
+  <header>
+    <div class="brand">Safety Induction — Video & Quiz</div>
+    <div class="lang-switch">
+      <button id="langEN" class="btn">English</button>
+      <button id="langEL" class="btn">Ελληνικά</button>
+      <span class="pill" id="progressPill">Video: 0%</span>
+    </div>
+  </header>
 
-<h1>Demo Basic Fire Safety Course</h1>
+  <main>
+    <!-- VIDEO GATE -->
+    <section class="card" id="videoGate">
+      <div class="grid-2">
+        <div>
+          <h1 id="t_title">Watch the induction video first</h1>
+          <p class="meta" id="t_subtitle">When the video ends, the quiz unlocks.</p>
+        </div>
+        <div><button class="btn ghost" id="devBypass">Dev bypass</button></div>
+      </div>
+      <div class="video-wrap" id="playerContainer">
+        <!-- YouTube IFrame API will inject the player here -->
+        <div id="player"></div>
+      </div>
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <div class="meta" id="t_hint">Tip: you must finish the whole video.</div>
+        <button id="startBtn" class="btn accent" disabled>Start Quiz</button>
+      </div>
+    </section>
 
-<div id="language-select" class="section">
-    <label>Select Language / Επιλέξτε Γλώσσα:</label>
-    <select id="lang">
-        <option value="en">English</option>
-        <option value="el">Ελληνικά (Greek)</option>
-    </select>
-</div>
+    <!-- QUIZ -->
+    <section class="card hide" id="quizCard">
+      <div class="grid-2">
+        <h1 id="t_quizTitle">Final Assessment</h1>
+        <div class="pill" id="attemptPill">Attempt: 1</div>
+      </div>
+      <div class="meta" id="t_quizNote">Answer all questions. You need 80% to pass.</div>
+      <div class="hr"></div>
+      <form id="quizForm">
+        <ol class="q" id="qList"></ol>
+        <div class="row" style="justify-content:space-between; margin-top:12px;">
+          <div class="meta" id="t_privacy">Your answers are stored locally in your browser.</div>
+          <button class="btn accent" id="submitBtn" type="submit">Submit</button>
+        </div>
+      </form>
+    </section>
 
-<div id="video-section" class="section">
-    <h2>Watch the Video / Παρακολουθήστε το Βίντεο</h2>
-    <p>Watch this basic fire safety video (embedded from YouTube). For demo, click "I've Watched" to proceed.</p>
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/cnn-yvszLXE" title="Fire Safety Training" frameborder="0" allowfullscreen></iframe>
-    <br>
-    <button id="watched-btn">I've Watched the Video / Έχω Παρακολουθήσει το Βίντεο</button>
-</div>
+    <!-- RESULTS -->
+    <section class="card hide" id="resultsCard">
+      <h1 id="t_resultsTitle">Results</h1>
+      <div id="scoreBox" class="result"></div>
+      <div id="detailBox" class="footer"></div>
+      <div class="row" style="margin-top:12px; justify-content:space-between;">
+        <button class="btn" id="reviewBtn">Review</button>
+        <div class="row">
+          <button class="btn" id="retakeBtn">Retake</button>
+          <button class="btn accent" id="downloadBtn">Download Certificate (demo)</button>
+        </div>
+      </div>
+    </section>
+  </main>
 
-<div id="quiz-section" class="section hidden">
-    <h2>Quiz / Κουίζ</h2>
-    <p>Answer all 10 questions correctly. If any wrong, restart with slightly rephrased questions.</p>
-    <form id="quiz-form"></form>
-    <button id="submit-btn">Submit / Υποβολή</button>
-    <div id="result"></div>
-    <button id="restart-btn" class="hidden">Restart Quiz / Επανεκκίνηση Κουίζ</button>
-</div>
+  <!-- YT IFrame API -->
+  <script>
+    // ---------- Localized strings ----------
+    const STR = {
+      en: {
+        title: "Watch the induction video first",
+        subtitle: "When the video ends, the quiz unlocks.",
+        hint: "Tip: you must finish the whole video.",
+        quizTitle: "Final Assessment",
+        quizNote: "Answer all questions. You need 80% to pass.",
+        privacy: "Your answers are stored locally in your browser.",
+        resultsTitle: "Results",
+        passed: (s) => `Passed — Score ${s}%`,
+        failed: (s) => `Not passed — Score ${s}%`,
+        detail: (corr, total) => `You answered ${corr} out of ${total} correctly.`,
+        review: "Review",
+        retake: "Retake",
+        cert: "Download Certificate (demo)"
+      },
+      el: {
+        title: "Παρακολούθησε πρώτα το βίντεο ενημέρωσης",
+        subtitle: "Με το τέλος του βίντεο, ξεκλειδώνει το τεστ.",
+        hint: "Συμβουλή: πρέπει να δεις ολόκληρο το βίντεο.",
+        quizTitle: "Τελική Αξιολόγηση",
+        quizNote: "Απάντησε όλες τις ερωτήσεις. Απαιτείται 80% για επιτυχία.",
+        privacy: "Οι απαντήσεις αποθηκεύονται τοπικά στον browser σου.",
+        resultsTitle: "Αποτελέσματα",
+        passed: (s) => `Επιτυχία — Βαθμός ${s}%`,
+        failed: (s) => `Μη επιτυχία — Βαθμός ${s}%`,
+        detail: (corr, total) => `Σωστές: ${corr} από ${total}.`,
+        review: "Ανασκόπηση",
+        retake: "Επανεξέταση",
+        cert: "Λήψη Πιστοποιητικού (demo)"
+      }
+    };
 
-<script>
-    // Data structure for questions: { en: {base: [...], variations: [[...], [...]]}, el: {...} }
-    const questions = {
-        en: [
-            {
-                base: "What is the first step in the PASS method for using a fire extinguisher?",
-                variations: [
-                    "What should you do initially when operating a fire extinguisher using PASS?",
-                    "In the PASS technique for extinguishers, what's the starting action?"
-                ],
-                options: ["Aim at the base of the fire", "Pull the pin", "Squeeze the handle", "Sweep from side to side"],
-                correct: 1 // Index of correct option (0-based)
-            },
-            {
-                base: "What type of fire is a Class A fire?",
-                variations: [
-                    "Which materials are involved in a Class A fire?",
-                    "Class A fires typically involve what substances?"
-                ],
-                options: ["Electrical equipment", "Flammable liquids", "Ordinary combustibles like wood or paper", "Metals"],
-                correct: 2
-            },
-            {
-                base: "Why should you never use water on an electrical fire?",
-                variations: [
-                    "What makes water unsafe for putting out electrical fires?",
-                    "For what reason is water not recommended on fires involving electricity?"
-                ],
-                options: ["It evaporates too quickly", "It conducts electricity and can cause shock", "It makes the fire spread faster", "It damages the equipment"],
-                correct: 1
-            },
-            {
-                base: "What does RACE stand for in fire emergency procedures?",
-                variations: [
-                    "In a fire response, what is the meaning of the RACE acronym?",
-                    "The RACE protocol for fires refers to what steps?"
-                ],
-                options: ["Run, Alert, Contain, Evacuate", "Rescue, Alarm, Confine, Extinguish/Evacuate", "Report, Assess, Control, Escape", "React, Assist, Close, Exit"],
-                correct: 1
-            },
-            {
-                base: "Where should you aim a fire extinguisher when fighting a fire?",
-                variations: [
-                    "When using an extinguisher, what part of the fire do you target?",
-                    "The proper aiming point for a fire extinguisher is where?"
-                ],
-                options: ["The top of the flames", "The base of the fire", "The smoke above", "The surrounding area"],
-                correct: 1
-            },
-            {
-                base: "What is the primary cause of most workplace fires?",
-                variations: [
-                    "What often starts the majority of fires at work?",
-                    "The main reason behind most fires in professional settings is what?"
-                ],
-                options: ["Faulty electrical equipment", "Cooking accidents", "Smoking materials", "Arson"],
-                correct: 0
-            },
-            {
-                base: "How often should fire exits be checked for obstructions?",
-                variations: [
-                    "What is the recommended frequency for inspecting fire exits to ensure they're clear?",
-                    "Fire escape routes should be verified for blockages how frequently?"
-                ],
-                options: ["Weekly", "Monthly", "Daily", "Annually"],
-                correct: 2
-            },
-            {
-                base: "What should you do if your clothes catch fire?",
-                variations: [
-                    "If clothing ignites, what is the correct response?",
-                    "The proper action when your attire is on fire is what?"
-                ],
-                options: ["Run to find water", "Stop, drop, and roll", "Wave your arms to fan it out", "Remove the clothes while standing"],
-                correct: 1
-            },
-            {
-                base: "Why is it important to have a fire evacuation plan?",
-                variations: [
-                    "What makes a fire escape strategy essential?",
-                    "The value of planning for fire evacuation lies in what?"
-                ],
-                options: ["To save property", "To ensure safe and orderly exit for everyone", "To fight the fire effectively", "To comply with insurance"],
-                correct: 1
-            },
-            {
-                base: "What color is typically used for fire safety signs?",
-                variations: [
-                    "Fire-related safety signage is usually in what hue?",
-                    "The standard color for signs about fire precautions is?"
-                ],
-                options: ["Green", "Blue", "Red", "Yellow"],
-                correct: 2
-            }
-        ],
-        el: [
-            {
-                base: "Ποιο είναι το πρώτο βήμα στη μέθοδο PASS για τη χρήση πυροσβεστήρα;",
-                variations: [
-                    "Τι πρέπει να κάνετε αρχικά όταν χειρίζεστε έναν πυροσβεστήρα χρησιμοποιώντας το PASS;",
-                    "Στη τεχνική PASS για πυροσβεστήρες, ποια είναι η αρχική ενέργεια;"
-                ],
-                options:
+    // ---------- Data model ----------
+    // Each question has: id, stems {en,el}, optionsVariants: [ {en:[...], el:[...], correctIndex: n}, { ... alt wording ... } ]
+    // We keep order stable; only wording changes on retry for questions answered wrong previously.
+    const QUESTIONS = [
+      {
+        id: "q1",
+        stems: { en: "Why is PPE important on site?", el: "Γιατί είναι σημαντικά τα ΜΑΠ (PPE) στο εργοτάξιο;" },
+        optionsVariants: [
+          { en: ["It reduces injury risk", "It looks professional", "It replaces training", "It helps work faster"], el: ["Μειώνει τον κίνδυνο τραυματισμού", "Δείχνει επαγγελματισμό", "Αντικαθιστά την εκπαίδευση", "Βοηθά να δουλεύεις γρηγορότερα"], correctIndex: 0 },
+          { en: ["It minimizes harm from hazards", "It improves style", "It makes training unnecessary", "It guarantees speed"], el: ["Ελαχιστοποιεί τη βλάβη από κινδύνους", "Βελτιώνει το στυλ", "Κάνει την εκπαίδευση περιττή", "Εγγυάται ταχύτητα"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q2",
+        stems: { en: "Before starting a task, you should…", el: "Πριν ξεκινήσεις μια εργασία, πρέπει να…" },
+        optionsVariants: [
+          { en: ["Assess the risk", "Skip induction", "Rely on others", "Ignore signage"], el: ["Κάνεις εκτίμηση κινδύνου", "Παραλείπεις την ενημέρωση", "Βασίζεσαι στους άλλους", "Αγνοείς τη σήμανση"], correctIndex: 0 },
+          { en: ["Review hazards and controls", "Avoid toolbox talks", "Assume it's safe", "Disregard warnings"], el: ["Ελέγχεις κινδύνους και μέτρα", "Αποφεύγεις τα toolbox talks", "Υποθέτεις ότι είναι ασφαλές", "Παραβλέπεις προειδοποιήσεις"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q3",
+        stems: { en: "What is the safest way to report a hazard?", el: "Ποιος είναι ο ασφαλέστερος τρόπος αναφοράς κινδύνου;" },
+        optionsVariants: [
+          { en: ["Follow the site procedure", "Tell a friend after work", "Post on social media", "Ignore it if minor"], el: ["Ακολουθείς τη διαδικασία του χώρου", "Το λες σε φίλο μετά", "Το αναρτάς στα social", "Το αγνοείς αν είναι μικρό"], correctIndex: 0 },
+          { en: ["Use the formal reporting process", "Mention it casually later", "Share publicly online", "Leave it be"], el: ["Χρησιμοποιείς επίσημη αναφορά", "Το αναφέρεις χαλαρά αργότερα", "Το κοινοποιείς δημόσια", "Το αφήνεις"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q4",
+        stems: { en: "When lifting, the best practice is to…", el: "Κατά την ανύψωση, η καλύτερη πρακτική είναι να…" },
+        optionsVariants: [
+          { en: ["Keep back straight, bend knees", "Twist quickly", "Hold load away", "Lift with a jerk"], el: ["Κρατάς ίσια πλάτη, λυγίζεις γόνατα", "Στρέφεσαι γρήγορα", "Κρατάς το φορτίο μακριά", "Σηκώνεις απότομα"], correctIndex: 0 },
+          { en: ["Maintain neutral spine, use legs", "Rotate mid-lift", "Extend arms fully", "Snatch the load"], el: ["Διατηρείς ουδέτερη σπονδυλική στήλη, δουλεύεις με πόδια", "Στρέφεσαι κατά την ανύψωση", "Τεντώνεις τελείως τα χέρια", "Το αρπάζεις απότομα"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q5",
+        stems: { en: "What does a red emergency stop do?", el: "Τι κάνει το κόκκινο πλήκτρο έκτακτης ανάγκης;" },
+        optionsVariants: [
+          { en: ["Stops equipment immediately", "Speeds up machinery", "Sends a text", "Opens a gate"], el: ["Σταματά άμεσα τον εξοπλισμό", "Επιταχύνει μηχανήματα", "Στέλνει μήνυμα", "Ανοίγει πύλη"], correctIndex: 0 },
+          { en: ["Cuts power to the machine", "Boosts performance", "Places a call", "Unlocks access"], el: ["Κόβει την τροφοδοσία", "Αυξάνει απόδοση", "Κάνει κλήση", "Ξεκλειδώνει πρόσβαση"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q6",
+        stems: { en: "If you see damaged electrical leads, you…", el: "Αν δεις φθαρμένα καλώδια ρεύματος, πρέπει να…" },
+        optionsVariants: [
+          { en: ["Tag out and report", "Wrap with tape and use", "Ignore if working", "Hide it"], el: ["Κάνεις απόσυρση/σήμανση και αναφορά", "Τυλίγεις με ταινία και το χρησιμοποιείς", "Το αγνοείς αν δουλεύει", "Το κρύβεις"], correctIndex: 0 },
+          { en: ["Isolate and notify supervisor", "Quick-fix and proceed", "Carry on regardless", "Conceal the issue"], el: ["Απομονώνεις και ειδοποιείς επόπτη", "Πρόχειρη «επισκευή» και συνεχίζεις", "Συνεχίζεις όπως να ’ναι", "Κρύβεις το πρόβλημα"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q7",
+        stems: { en: "Housekeeping on site means…", el: "Η τάξη και καθαριότητα στο χώρο σημαίνει…" },
+        optionsVariants: [
+          { en: ["Keep areas clear of debris", "Decorate the office", "Store tools anywhere", "Leave spills"], el: ["Κρατάς τους χώρους χωρίς μπάζα", "Στολίζεις το γραφείο", "Αφήνεις εργαλεία όπου να ’ναι", "Αφήνεις διαρροές"], correctIndex: 0 },
+          { en: ["Remove waste and trip hazards", "Add ornaments", "Drop tools randomly", "Ignore leaks"], el: ["Απομακρύνεις απόβλητα και παγίδες πτώσης", "Βάζεις διακοσμητικά", "Παρατάς εργαλεία τυχαία", "Αγνοείς διαρροές"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q8",
+        stems: { en: "Working at heights requires…", el: "Η εργασία σε ύψος απαιτεί…" },
+        optionsVariants: [
+          { en: ["Fall protection and training", "Running on edges", "No supervision", "Loose footwear"], el: ["Συστήματα προστασίας πτώσης και εκπαίδευση", "Τρέξιμο σε άκρες", "Χωρίς επίβλεψη", "Χαλαρά παπούτσια"], correctIndex: 0 },
+          { en: ["Harness/guardrails and competency", "Stepping on parapets", "Skipping permits", "Untied laces"], el: ["Ζώνη/κιγκλιδώματα και επάρκεια", "Περπάτημα σε στηθαία", "Παράλειψη αδειών", "Λυτά κορδόνια"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q9",
+        stems: { en: "MSDS/SDS documents tell you…", el: "Τα MSDS/SDS σου λένε…" },
+        optionsVariants: [
+          { en: ["Hazards and safe handling", "Price of materials", "Work schedules", "Holiday dates"], el: ["Κινδύνους και ασφαλή χειρισμό", "Τιμή υλικών", "Προγράμματα εργασίας", "Ημερομηνίες αδειών"], correctIndex: 0 },
+          { en: ["Chemical risks and controls", "Supplier discounts", "Shift rosters", "Vacation policy"], el: ["Χημικούς κινδύνους και μέτρα", "Εκπτώσεις προμηθευτή", "Βάρδιες", "Πολιτική διακοπών"], correctIndex: 0 }
+        ]
+      },
+      {
+        id: "q10",
+        stems: { en: "If an alarm sounds, you should…", el: "Αν ακουστεί συναγερμός, πρέπει να…" },
+        optionsVariants: [
+          { en: ["Follow the evacuation plan", "Finish your task first", "Use lifts", "Wait for social media"], el: ["Ακολουθήσεις το σχέδιο εκκένωσης", "Τελειώσεις πρώτα τη δουλειά", "Χρησιμοποιήσεις ανελκυστήρες", "Περιμένεις social media"], correctIndex: 0 },
+          { en: ["Go to the assembly point", "Collect extra tools", "Take elevators", "Check online rumors"], el: ["Πας στο σημείο συγκέντρωσης", "Μαζέψεις επιπλέον εργαλεία", "Παίρνεις ανελκυστήρα", "Ελέγχεις φήμες online"], correctIndex: 0 }
+        ]
+      }
+    ];
+
+    // ---------- State & storage ----------
+    const STORAGE_KEY = "safetyQuiz_wrongCounts_v1";
+    const ATTEMPTS_KEY = "safetyQuiz_attempts_v1";
+    const LANG_KEY = "safetyQuiz_lang_v1";
+    const wrongCounts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const attempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || "0", 10);
+    let currentAttempt = attempts + 1;
+    let lang = localStorage.getItem(LANG_KEY) || "en";
+    let quizUnlocked = false;
+
+    // ---------- DOM refs ----------
+    const t = (k) => STR[lang][k];
+    const el = (id) => document.getElementById(id);
+    const startBtn = el("startBtn");
+    const devBypass = el("devBypass");
+    const qList = el("qList");
+    const quizCard = el("quizCard");
+    const videoGate = el("videoGate");
+    const resultsCard = el("resultsCard");
+    const attemptPill = el("attemptPill");
+    const scoreBox = el("scoreBox");
+    const detailBox = el("detailBox");
+    const submitBtn = el("submitBtn");
+    const reviewBtn = el("reviewBtn");
+    const retakeBtn = el("retakeBtn");
+    const downloadBtn = el("downloadBtn");
+    const progressPill = el("progressPill");
+
+    // ---------- Language init ----------
+    function applyLang() {
+      el("t_title").textContent = t("title");
+      el("t_subtitle").textContent = t("subtitle");
+      el("t_hint").textContent = t("hint");
+      el("t_quizTitle").textContent = t("quizTitle");
+      el("t_quizNote").textContent = t("quizNote");
+      el("t_resultsTitle").textContent = t("resultsTitle");
+      el("downloadBtn").textContent = t("cert");
+      attemptPill.textContent = `Attempt: ${currentAttempt}`;
+      localStorage.setItem(LANG_KEY, lang);
+    }
+    el("langEN").addEventListener("click",()=>{ lang="en"; applyLang(); renderQuiz(); });
+    el("langEL").addEventListener("click",()=>{ lang="el"; applyLang(); renderQuiz(); });
+
+    // ---------- Build quiz ----------
+    function renderQuiz() {
+      qList.innerHTML = "";
+      QUESTIONS.forEach((q, idx) => {
+        const wc = wrongCounts[q.id] || 0;
+        const variant = wc > 0 ? 1 : 0; // show alternate wording if previously wrong
+        const opts = q.optionsVariants[variant][lang === "en" ? "en" : "el"];
+        const correctIndex = q.optionsVariants[variant].correctIndex;
+
+        const li = document.createElement("li");
+        li.className = "q-item";
+        li.dataset.qid = q.id;
+        li.dataset.correct = String(correctIndex);
+
+        const stem = document.createElement("p");
+        stem.className = "q-stem";
+        stem.textContent = `${idx+1}. ${q.stems[lang==="en"?"en":"el"]}`;
+        li.appendChild(stem);
+
+        const optsWrap = document.createElement("div");
+        optsWrap.className = "opts";
+
+        opts.forEach((text, i) => {
+          const id = `${q.id}_${i}`;
+          const label = document.createElement("label");
+          label.className = "opt";
+          label.setAttribute("for", id);
+
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = q.id;
+          radio.id = id;
+          radio.value = String(i);
+
+          const span = document.createElement("span");
+          span.textContent = text;
+
+          label.appendChild(radio);
+          label.appendChild(span);
+          optsWrap.appendChild(label);
+        });
+
+        li.appendChild(optsWrap);
+        qList.appendChild(li);
+      });
+    }
+
+    // ---------- Submit ----------
+    document.getElementById("quizForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+
+      const items = Array.from(document.querySelectorAll(".q-item"));
+      let correct = 0;
+      const total = items.length;
+
+      items.forEach(item => {
+        const qid = item.dataset.qid;
+        const picked = item.querySelector('input[type="radio"]:checked');
+        const correctIndex = parseInt(item.dataset.correct,10);
+
+        const optLabels = item.querySelectorAll("label.opt");
+        optLabels.forEach((l,i)=>l.style.borderColor = "#262a32"); // reset
+
+        if (!picked) {
+          // treat as wrong (no answer chosen)
+          wrongCounts[qid] = (wrongCounts[qid] || 0) + 1;
+          item.querySelectorAll("label.opt")[correctIndex].style.borderColor = "rgba(34,197,94,.7)";
+          return;
+        }
+
+        const choice = parseInt(picked.value,10);
+        if (choice === correctIndex) {
+          correct++;
+          item.querySelectorAll("label.opt")[choice].style.borderColor = "rgba(34,197,94,.9)";
+        } else {
+          wrongCounts[qid] = (wrongCounts[qid] || 0) + 1;
+          item.querySelectorAll("label.opt")[choice].style.borderColor = "rgba(255,107,107,.8)";
+          item.querySelectorAll("label.opt")[correctIndex].style.borderColor = "rgba(34,197,94,.7)";
+        }
+      });
+
+      // Persist wrong counts & attempts
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(wrongCounts));
+      localStorage.setItem(ATTEMPTS_KEY, String(currentAttempt));
+
+      const percent = Math.round((correct/total)*100);
+      const pass = percent >= 80;
+
+      scoreBox.className = `result ${pass ? "ok":"bad"}`;
+      scoreBox.textContent = pass ? STR[lang].passed(percent) : STR[lang].failed(percent);
+      detailBox.textContent = STR[lang].detail(correct, total);
+
+      quizCard.classList.add("hide");
+      resultsCard.classList.remove("hide");
+      submitBtn.disabled = false;
+    });
+
+    reviewBtn.addEventListener("click", ()=>{
+      resultsCard.classList.add("hide");
+      quizCard.classList.remove("hide");
+      // keep current markings for review
+    });
+
+    retakeBtn.addEventListener("click", ()=>{
+      resultsCard.classList.add("hide");
+      quizCard.classList.remove("hide");
+      currentAttempt += 1;
+      attemptPill.textContent = `Attempt: ${currentAttempt}`;
+      renderQuiz();
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+
+    // Demo certificate download (not official)
+    downloadBtn.addEventListener("click", ()=>{
+      const blob = new Blob(
+        [ `Demo Certificate\nName: (enter here)\nDate: ${new Date().toISOString()}\nStatus: Local-only sample` ],
+        { type: "text/plain;charset=utf-8" }
+      );
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "certificate-demo.txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // ---------- Video gate ----------
+    // Uses YouTube IFrame API to unlock quiz only after video ends.
+    // Replace VIDEO_ID with your chosen induction video.
+    const YT_VIDEO_ID = "IUN664s7N-c"; // example: “Safety in Construction Sites” (general awareness)
+    let ytPlayer = null;
+    let watched = false;
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('player', {
+        videoId: YT_VIDEO_ID,
+        playerVars: { rel:0, modestbranding:1 },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+    function onPlayerReady() {
+      // Nothing special on ready
+    }
+    function onPlayerStateChange(e) {
+      // Track progress % in a lightweight way
+      try {
+        const dur = ytPlayer.getDuration() || 0;
+        const it = setInterval(()=>{
+          if (!ytPlayer || dur === 0) return;
+          const t = ytPlayer.getCurrentTime();
+          const pct = Math.min(100, Math.floor((t/dur)*100));
+          progressPill.textContent = `Video: ${pct}%`;
+          if (pct >= 100 || e.data === YT.PlayerState.ENDED) {
+            clearInterval(it);
+            unlockQuiz();
+          }
+        }, 800);
+      } catch {}
+      if (e.data === YT.PlayerState.ENDED) {
+        unlockQuiz();
+      }
+    }
+    function unlockQuiz() {
+      if (quizUnlocked) return;
+      quizUnlocked = true;
+      watched = true;
+      startBtn.disabled = false;
+      progressPill.textContent = "Video: 100%";
+    }
+
+    // Dev bypass (for testing or demos)
+    devBypass.addEventListener("click", ()=>{
+      unlockQuiz();
+    });
+
+    // Load YT API script
+    (function(){
+      const s = document.createElement('script');
+      s.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(s);
+      window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    })();
+
+    // ---------- Start quiz ----------
+    startBtn.addEventListener("click", ()=>{
+      if (!watched && !quizUnlocked) return;
+      videoGate.classList.add("hide");
+      quizCard.classList.remove("hide");
+      renderQuiz();
+      applyLang();
+    });
+
+    // ---------- First paint ----------
+    applyLang();
+  </script>
+</body>
+</html>
